@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>happyDemon/jQvalidation-laravel</title>
+    <!-- Bootstrap theme -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/yeti/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-yxFy3Tt84CcGRj9UI7RA25hoUMpUPoFzcdPtK3hBdNgEGnh9FdKgMVM+lbAZTKN2" crossorigin="anonymous">
+    <!-- Font awesome, just in case -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet"
+          integrity="sha384-T8Gy5hrqNKT+hzMclPo118YTQO6cYprQmhrYwIiQ/3axmI1hQomh7Ud2hPOy8SP1" crossorigin="anonymous">
+    <!-- Default parsley styling-->
+    <link rel="stylesheet" href="examples/style.css">
+</head>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+                    data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">jQvalidation-laravel</a>
+        </div>
+
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Rules
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#rules_in">In</a></li>
+                        <li><a href="#rules_different">Different</a></li>
+                        <li><a href="#rules_size">Size</a></li>
+                        <li><a href="#rules_dates">Dates</a></li>
+                        <li><a href="#rules_misc">Miscellaneous</a></li>
+                        <li><a href="#rules_required">Requireds</a></li>
+                        <li><a href="#rules_files">Files & images</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="http://jqvalidation.happydemon.xyz/">Documentation</a></li>
+                <li><a href="https://github.com/happyDemon">happyDemon</a></li>
+                <li><a class="link-repo" href="https://github.com/happyDemon/jQvalidation-laravels"><i
+                        class="fa fa-github fa-2x"></i></a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="jumbotron">
+    <div class="container">
+        <h1>jQvalidation Laravel</h1>
+        <p>
+            These are some extra rules for jQuery-validation.js that are actually translated from <br/>
+            Laravel's server-side validation rules.
+        </p>
+        <p><a href="https://github.com/happyDemon/jQvalidation-laravel" class="btn pull-right">Learn more <i
+                class="fa fa-github fa-2x"></i></a></p>
+    </div>
+</div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 id="rules_in">Comparison rules</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <form class="form">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label for="inputInValue" class="control-label">regex</label>
+                                <a class="text-warning clearfix" tabindex="-1"
+                                   href="https://laravel.com/docs/5.2/validation#rule-in">in</a>
+                            </div>
+                            <div class="col-md-9">
+                                <input data-parsley-trigger="blur" data-rule-regex="^[A-Za-z0-9](([_\.\-]?[a-zA-Z0-9]+)*)@([A-Za-z0-9]+)(([\.\-]?[a-zA-Z0-9]+)*)\.([A-Za-z]{2,})$" type="text"
+                                       class="form-control input-sm" id="inputInValue" placeholder="Value">
+                                <div class="help-block text-info">
+                                    <small>Value should be a valid e-mail
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label for="inputNotInValue" class="control-label">different</label>
+                                <a class="text-warning clearfix" tabindex="-1"
+                                   href="https://laravel.com/docs/5.2/validation#rule-not-in">not_in</a>
+                            </div>
+                            <div class="col-md-9">
+                                <input data-parsley-trigger="blur" data-rule-different="#inputInValue"
+                                       type="text" class="form-control input-sm" id="inputNotInValue"
+                                       placeholder="Value">
+                                <div class="help-block text-info">
+                                    <small>Value should be different from the previous input.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <div class="container">
+        <div class="col-md-2">
+            <h4>Tested with</h4>
+            <ul class="list-unstyled">
+                <li><span class="col-md-8">jQuery</span>
+                    <small class="col-md-4 text-primary">2.2.4</small>
+                </li>
+                <li><span class="col-md-8">ParsleyJS</span>
+                    <small class="col-md-4 text-primary">2.3.13</small>
+                </li>
+                <li><span class="col-md-8">MomentJS</span>
+                    <small class="col-md-4 text-primary">2.13.0</small>
+                </li>
+            </ul>
+        </div>
+        <div class="col-md-2 col-md-offset-1">
+            <h4>Tested in</h4>
+            <ul class="list-unstyled">
+                <li><span class="col-md-8">Chrome</span></li>
+            </ul>
+        </div>
+        <div class="col-md-6 col-md-offset-1">
+
+        </div>
+    </div>
+</div>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"
+        integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+<!-- Bootstrap -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+        integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+<!-- jQuery validation -->
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.15.0/jquery.validate.js"></script>
+<script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.15.0/additional-methods.js"></script>
+<!-- MomentJS for handling date validation -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.js"></script>
+<!-- New validation rules -->
+<script type="text/javascript" src="dist/laravel-jQvalidation.js"></script>
+
+<script>
+
+
+    $(function () {
+        jQuery.validator.addMethod(
+                'regex',
+                function(value, element, param){
+                    console.log(element, $(element), this);
+                    return RegExp(param).test(value);
+                },
+                'The value is in an invalid format.'
+        );
+        // Tweak parsley to take bootstrap into account
+        $('form').validate({
+            onfocusout: function(element) { $(element).valid(); },
+            debug: true
+        });
+        $('form').on('submit', function () {
+            return false;
+        });
+    });
+</script>
+</body>
+</html>
