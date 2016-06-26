@@ -45,10 +45,10 @@ export default {
         // If not yet bound
         $elem.on('change', function () {
             if (originalNotEmpty === true && $elem.val() != '') {
-                jQvalidator.element(jQuery(element).attr('id'));
+                jQvalidator.element('#'+jQuery(element).attr('id'));
             }
             else if (originalNotEmpty !== true) {
-                jQvalidator.element(jQuery(element).attr('id'));
+                jQvalidator.element('#'+jQuery(element).attr('id'));
             }
         });
     }
