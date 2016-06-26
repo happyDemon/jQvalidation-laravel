@@ -1,6 +1,6 @@
 /*!
  * jQvalidation-laravel.js
- * Version 0.1.0 - built Sun, Jun 26th 2016, 11:03 am
+ * Version 0.1.0 - built Sun, Jun 26th 2016, 6:10 pm
  * https://github.com/happyDemon/jQvalidation-laravel
  * Maxim Kerstens - <maxim.kerstens@gmail.com>
  * MIT Licensed
@@ -60,10 +60,57 @@
                 if (originalNotEmpty === true && $elem.val() != '') {
                     jQvalidator.element('#' + jQuery(element).attr('id'));
                 } else if (originalNotEmpty !== true) {
-                    console.log(jQuery(element).attr('id'));
                     jQvalidator.element('#' + jQuery(element).attr('id'));
                 }
             });
+        },
+
+        promiseSuccess: function promiseSuccess(validator, element) {
+            var previous = validator.previousValue(element, 'dimensions');
+
+            if (!validator.settings.messages[element.name]) {
+                validator.settings.messages[element.name] = {};
+            }
+            previous.originalMessage = previous.originalMessage || validator.settings.messages[element.name]['dimensions'];
+            validator.settings.messages[element.name]['dimensions'] = previous.message;
+
+            if (previous.old === element.files[0].name) {
+                return previous.valid;
+            }
+
+            previous.old = element.files[0].name;
+
+            var submitted = validator.formSubmitted;
+            validator.resetInternals();
+            validator.toHide = validator.errorsFor(element);
+            validator.formSubmitted = submitted;
+            validator.successList.push(element);
+            validator.invalid[element.name] = false;
+            validator.showErrors();
+            previous.valid = true;
+        },
+        promiseError: function promiseError(validator, element) {
+            var previous = validator.previousValue(element, 'dimensions');
+
+            if (!validator.settings.messages[element.name]) {
+                validator.settings.messages[element.name] = {};
+            }
+            previous.originalMessage = previous.originalMessage || validator.settings.messages[element.name]['dimensions'];
+            validator.settings.messages[element.name]['dimensions'] = previous.message;
+
+            if (previous.old === element.files[0].name) {
+                return previous.valid;
+            }
+
+            previous.old = element.files[0].name;
+            console.log(element);
+
+            var errors = {};
+            var message = validator.defaultMessage(element, { method: 'dimensions', parameters: [] });
+            errors[element.name] = previous.message = message;
+            validator.invalid[element.name] = true;
+            validator.showErrors(errors);
+            previous.valid = false;
         }
     };
 
@@ -277,13 +324,10 @@
 
     // THe value should be different from another input's value
     jQuery.validator.addMethod('different', function (value, element, param) {
-        console.log(param, element);
         // Re-run validation if the other element's value changes
         utils.bindChangeToOtherElement('different', param, element, this);
 
         var otherValue = jQuery(param).val();
-
-        console.log(otherValue, value);
 
         // If the other elem's empty or not the same return true
         return otherValue == '' || otherValue != value;
@@ -342,10 +386,10 @@
     }, 'This value is incorrect.');
 
     // The value is required only if another input's value matched one of the defined ones.
-    // the parameter should be formatted as data-parsley-required-if="["#elementValueToCheck", "value1,value2,.."]"
+    // the parameter should be formatted as data-rule-requiredIf="["#elementValueToCheck", "value1,value2,.."]"
     jQuery.validator.addMethod('requiredIf', function (value, element, parameters) {
         // Normalise the parameters
-        var values = jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+        var values = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
         // Get the other input's selector
         var field = values[0];
@@ -367,7 +411,7 @@
     }, 'This field is required.');
 
     // The value is required if other field does not contain any of the specified values
-    // the parameter should be formatted as data-parsley-required-unless="["#elementValueToCheck", "value1,value2,.."]"
+    // the parameter should be formatted as data-rule-requiredUnless="["#elementValueToCheck", "value1,value2,.."]"
     jQuery.validator.addMethod('requiredUnless', function (value, element, parameters) {
         // Normalise the parameters
         var values = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -394,7 +438,7 @@
     }, 'This field is required.');
 
     // The value is required if  any of the inputs are present in the dom
-    // the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
+    // the parameter should be formatted as data-rule-requiredWith="#elementValueToCheck,#elementValueToCheck,.."
     jQuery.validator.addMethod('requiredWith', function (value, element, parameters) {
         // Normalise the parameters
         var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -402,12 +446,13 @@
         // Only validate if the char count is 0
         if (value.length == 0) {
             var AnyPresent = false;
+            var self = this;
 
             allElements.forEach(function (id) {
                 var $elem = jQuery(id);
 
                 // Check for changes on this other input
-                utils.bindChangeToOtherElement('requiredWith', id, element, this);
+                utils.bindChangeToOtherElement('requiredWith', id, element, self);
 
                 // If the element is in the dom and has a value
                 if ($elem.length > 0 && $elem.val() != '') {
@@ -422,7 +467,7 @@
     }, 'This field is required.');
 
     // The value is required if all other inputs are present in the dom
-    // the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
+    // the parameter should be formatted as data-rule-requiredWithAll="#elementValueToCheck,#elementValueToCheck,.."
     jQuery.validator.addMethod('requiredWithAll', function (value, element, parameters) {
         // Normalise the parameters
         var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -430,12 +475,13 @@
         // Only validate if the char count is 0
         if (value.length == 0) {
             var AllPresent = true;
+            var self = this;
 
             allElements.forEach(function (id) {
                 var $elem = jQuery(id);
 
                 // Check for changes on this other input
-                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
                 // If the value isn't in the dom or is empty
                 if ($elem.length == 0 || $elem.val() == '') {
@@ -450,7 +496,7 @@
     }, 'This field is required.');
 
     // The value is required if any of the inputs are not present in the dom
-    // the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
+    // the parameter should be formatted as data-rule-requiredWith="#elementValueToCheck,#elementValueToCheck,.."
 
     jQuery.validator.addMethod('requiredWithout', function (value, element, parameters) {
         // Normalise the parameters
@@ -459,26 +505,27 @@
         // Only validate if the char count is 0
         if (value.length == 0) {
             var AnyPresent = false;
+            var self = this;
 
             allElements.forEach(function (id) {
                 var $elem = jQuery(id);
 
                 // Check for changes on this other input
-                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
                 if ($elem.length == 0 || $elem.val() == '') {
                     AnyPresent = true;
                 }
             });
 
-            return AnyPresent;
+            return !AnyPresent;
         }
 
         return true;
     }, 'This field is required.');
 
-    // The value is required if all other inputs are not present in the dom
-    // the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
+    // The value is required if all other inputs are not empty
+    // the parameter should be formatted as data-rule-requiredWithAll="#elementValueToCheck,#elementValueToCheck,.."
     jQuery.validator.addMethod('requiredWithoutAll', function (value, element, parameters) {
         // Normalise the parameters
         var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -486,12 +533,13 @@
         // Only validate if the char count is 0
         if (value.length == 0) {
             var AllEmpty = true;
+            var self = this;
 
             allElements.forEach(function (id) {
                 var $elem = jQuery(id);
 
                 // Check for changes on this other input
-                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
                 if ($elem.length == 1 && $elem.val() != '') {
                     AllEmpty = false;
@@ -513,8 +561,10 @@
 
     // Make sure all files within the inputs are equal to or smaller than the defined size.
     jQuery.validator.addMethod('fileSizeMax', function (value, element, params) {
+        params = jQuery.isArray(params) ? params : utils.parseArrayStringParameter(params);
+        console.log(params);
         var maxSize = params[0];
-        sizeMultiplyer = params[1].toLowerCase();
+        var sizeMultiplyer = params[1].toLowerCase().trim();
         var files = element.files;
 
         // Multiply the max file size
@@ -538,10 +588,11 @@
 
     // Make sure all files within the inputs are equal to or bigger than the defined size.
     jQuery.validator.addMethod('fileSizeMin', function (value, element, params) {
+        params = jQuery.isArray(params) ? params : utils.parseArrayStringParameter(params);
         var files = element.files;
 
         // Multiply the min file size
-        var minSize = params[0] * filesSizes[params[1].toLowerCase()];
+        var minSize = params[0] * filesSizes[params[1].toLowerCase().trim()];
 
         // If a file is present in the input
         if (files.length > 0) {
@@ -558,11 +609,12 @@
 
     // Make sure all files within the inputs are between the defined sizes.
     jQuery.validator.addMethod('fileSizeBetween', function (value, element, params) {
+        params = jQuery.isArray(params) ? params : utils.parseArrayStringParameter(params);
         var files = element.files;
 
         // Multiply the file sizes
-        var minSize = params[0] * filesSizes[params[2].toLowerCase()];
-        var maxSize = params[1] * filesSizes[params[2].toLowerCase()];
+        var minSize = params[0] * filesSizes[params[2].toLowerCase().trim()];
+        var maxSize = params[1] * filesSizes[params[2].toLowerCase().trim()];
 
         // If a file is present in the input
         if (files.length > 0) {
@@ -596,7 +648,7 @@
 
     // Make sure all files within the input have one of the defined mimetypes
     jQuery.validator.addMethod('fileMimetype', function (value, element, mimetypes) {
-        var allMimes = utils.parseArrayStringParameter(mimetypes);
+        var allMimes = jQuery.isArray(mimetypes) ? mimetypes : utils.parseArrayStringParameter(mimetypes);
 
         var files = element.files;
 
@@ -615,7 +667,7 @@
 
     // Make sure all files within the input have one of the defined extensions
     jQuery.validator.addMethod('fileExt', function (value, element, extensions) {
-        var allExts = utils.parseArrayStringParameter(extensions);
+        var allExts = jQuery.isArray(extensions) ? extensions : utils.parseArrayStringParameter(extensions);
 
         var files = element.files;
 
@@ -634,108 +686,131 @@
         return true;
     }, 'This file does not have the correct extensions.');
 
+    /**
+     * jQuery validation needs support for promises in order for this to work.
+     * 
     // Make sure all images within the input have specific dimensions
     jQuery.validator.addMethod('dimensions', function (value, element, param) {
         var files = element.files;
-
-        // @todo redo this?
-        var options = jQuery.isJSON(param) ? param : JSON.parse(param);
-
-        // If a file is present in the input
+        var validator = this;
+        var options = (typeof param == 'object') ? param : JSON.parse(param);
+        var method = 'dimensions';
+         var previous = this.previousValue(element, method),
+            validator, data, optionDataString;
+          // If a file is present in the input
         if (files.length > 0) {
-            var defer = jQuery.Deferred();
+             var defer = jQuery.Deferred();
             var _URL = window.URL || window.webkitURL;
-
-            var image = new Image();
-
-            // Validate once t he image is loaded
+             if (!this.settings.messages[element.name]) {
+                this.settings.messages[element.name] = {};
+            }
+             previous.originalMessage = previous.originalMessage || this.settings.messages[element.name][method];
+             this.settings.messages[element.name][method] = previous.message;
+             if (previous.old === _URL) {
+                return previous.valid;
+            }
+             this.startRequest(element);
+             var image = new Image;
+             // Validate once t he image is loaded
             image.onload = function () {
                 var width = this.width;
                 var height = this.height;
-
-                // Check min width, if defined
+                 // Check min width, if defined
                 if (typeof options.min_width != 'undefined') {
-                    if (width < options.min_width) {
-                        defer.reject(image);
-                        return true;
+                    if (width < Number(options.min_width)) {
+                        defer.reject(image, validator, element);
+                        return false;
                     }
                 }
-
-                // Check max width, if defined
+                 // Check max width, if defined
                 if (typeof options.max_width != 'undefined') {
-                    if (width > options.max_width) {
-                        defer.reject(image);
+                    if (width > Number(options.max_width)) {
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                // Check min height, if defined
+                 // Check min height, if defined
                 if (typeof options.min_height != 'undefined') {
-                    if (height < options.min_height) {
-                        defer.reject(image);
+                    if (height < Number(options.min_height)) {
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                // Check max height, if defined
+                 // Check max height, if defined
                 if (typeof options.max_height != 'undefined') {
-                    if (height > options.max_height) {
-                        defer.reject(image);
+                    if (height > Number(options.max_height)) {
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                // Check width, if defined
+                 // Check width, if defined
                 if (typeof options.width != 'undefined') {
-                    if (width != options.width) {
-                        defer.reject(image);
+                    if (width != Number(options.width)) {
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                // Check height, if defined
+                 // Check height, if defined
                 if (typeof options.height != 'undefined') {
-                    if (height != options.height) {
-                        defer.reject(image);
+                    if (height != Number(options.height)) {
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                // Check ratio, if defined
+                 // Check ratio, if defined
                 if (typeof options.ratio != 'undefined') {
                     var splitRatio = options.ratio.split(':');
                     if (splitRatio[0] / splitRatio[1] != width / height) {
-                        defer.reject(image);
+                        defer.reject(image, validator, element);
                         return true;
                     }
                 }
-
-                defer.resolve(image);
+                 defer.resolve(image, validator, element);
             };
-
-            // On error, reject the promise
+             // On error, reject the promise
             image.onerror = function () {
                 console.warn('image load error');
                 defer.reject();
-            };
-
-            image.src = _URL.createObjectURL(files[0]);
-
-            return defer.promise().then(function (image) {
+            }
+             image.src = _URL.createObjectURL(files[0]);
+             defer.promise().then(function (image, validator, element) {
                 // Clean up
                 image = null;
-
-                return true;
-            }, function (image) {
+                var response = true;
+                var valid = true,
+                    errors, message, submitted;
+                 validator.settings.messages[ element.name ][ method ] = previous.originalMessage;
+                 console.log('success');
+                submitted = validator.formSubmitted;
+                validator.resetInternals();
+                validator.toHide = validator.errorsFor( element );
+                validator.formSubmitted = submitted;
+                validator.successList.push( element );
+                validator.invalid[ element.name ] = false;
+                validator.showErrors();
+                previous.valid = valid;
+                validator.stopRequest( element, valid );
+            }, function (image, validator, element) {
                 // Clean up
                 image = null;
-
-                return false;
+                 var response = false;
+                var valid = response,
+                    errors, message, submitted;
+                 validator.settings.messages[ element.name ][ method ] = previous.originalMessage;
+                 console.log('error');
+                errors = {};
+                message = response || validator.defaultMessage( element, { method: method, parameters: value } );
+                errors[ element.name ] = previous.message = message;
+                validator.invalid[ element.name ] = true;
+                validator.showErrors( errors );
+                previous.valid = valid;
+                validator.stopRequest( element, valid );
             });
+             console.log('pending');
+            return "pending";
         }
-
-        return true;
-    });
+         return true;
+    });*/
 
     /**
      * Overwrite core Parsley methods.
