@@ -1,6 +1,6 @@
 /*!
  * jQvalidation-laravel.js
- * Version 0.1.0 - built Sun, Jun 26th 2016, 9:48 am
+ * Version 0.1.0 - built Sun, Jun 26th 2016, 10:47 am
  * https://github.com/happyDemon/jQvalidation-laravel
  * Maxim Kerstens - <maxim.kerstens@gmail.com>
  * MIT Licensed
@@ -13,6 +13,78 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('jquery'), require('moment')) : typeof define === 'function' && define.amd ? define(['jquery', 'moment'], factory) : global.LjQv = factory(global.jQuery, global.moment);
 })(this, function (jQuery, moment) {
     'use strict';
+
+    /**
+     * Helper functions.
+     */
+    var utils = {
+        parseArrayStringParameter: function parseArrayStringParameter(parameter) {
+            var m = parameter.match(/^\s*\[(.*)\]\s*$/);
+
+            if (!m) throw 'Requirement is not an array: "' + parameter + '"';
+
+            return m[1].replace(/\'+/g, '').split(',');
+        },
+        /**
+         * This is used by various validation rules that rely on another input for validation.
+         *
+         * This function adds a 'change' event listener which forces the original to be validated again.
+         *
+         * @param rule              Name of the rule this change handler is for
+         * @param otherElement      Which element to bind this to
+         * @param element           The element which this bind request is coming from
+         * @param jQvalidator       The validator instance
+         * @param originalNotEmpty  Should the original element not be empty? (optional, default false)
+         */
+        bindChangeToOtherElement: function bindChangeToOtherElement(rule, otherElement, element, jQvalidator, originalNotEmpty) {
+            var $elem = jQuery(otherElement);
+            var elData = $elem.data('larajqv-rules');
+
+            // None were added yet, initialise
+            if (elData === undefined) {
+                elData = [rule];
+                $elem.data('larajqv-rules', elData);
+            }
+            // Initialised, but not present
+            else if (elData.indexOf(rule) == -1) {
+                    elData.push(rule);
+                    $elem.data('larajqv-rules', elData);
+                }
+                // Already bound
+                else {
+                        return;
+                    }
+
+            // If not yet bound
+            $elem.on('change', function () {
+                if (originalNotEmpty === true && $elem.val() != '') {
+                    jQvalidator.element(jQuery(element).attr('id'));
+                } else if (originalNotEmpty !== true) {
+                    jQvalidator.element(jQuery(element).attr('id'));
+                }
+            });
+        }
+    };
+
+    // The value should consist of letters
+    jQuery.validator.addMethod('alpha', function (value, element, param) {
+        return RegExp('/^[\pL\pM]+$/u').test(value);
+    }, 'The value is in an invalid format.');
+
+    // THe value should consist of letters, dashes and underscores
+    jQuery.validator.addMethod('alphaDash', function (value, element, param) {
+        return RegExp('/^[\pL\pM\pN_-]+$/u').test(value);
+    }, 'This value is not acceptable.');
+
+    // THe value should be alpha numeric
+    jQuery.validator.addMethod('alphaNum', function (value, element) {
+        return RegExp('/^[\pL\pM\pN]+$/u').test(value);
+    }, 'A duplicate value has been selected.');
+
+    // Validate the value against a regex pattern
+    jQuery.validator.addMethod('regex', function (value, element, param) {
+        return RegExp(param).test(value);
+    }, 'The value is in an invalid format.');
 
     // Check if the value is within a comma-separated list (val1,val2,..)
     jQuery.validator.addMethod('in', function (value, element, param) {
@@ -202,71 +274,14 @@
         }
     };
 
-    /**
-     * Helper functions.
-     *
-     * @type {{parseArrayStringParameter: larapars.parseArrayStringParameter, bindChangeToOtherElement: larapars.bindChangeToOtherElement, getDateFormatsOption: larapars.getDateFormatsOption}}
-     */
-    var utils = {
-        parseArrayStringParameter: function parseArrayStringParameter(parameter) {
-            var m = parameter.match(/^\s*\[(.*)\]\s*$/);
-
-            if (!m) throw 'Requirement is not an array: "' + parameter + '"';
-
-            return m[1].replace(/\'+/g, '').split(',');
-        },
-        /**
-         * This is used by various validation rules that rely on another input for validation.
-         *
-         * This function adds a 'change' event listener which forces the original to be validated again.
-         *
-         * @param rule              Name of the rule this change handler is for
-         * @param element           Which element to bind this to
-         * @param fieldInstance     The ParsleyFieldInstance we can call validate() on
-         * @param originalNotEmpty  Should the original element not be empty? (optional, default false)
-         */
-        bindChangeToOtherElement: function bindChangeToOtherElement(rule, element, fieldInstance, originalNotEmpty) {
-            var $elem = jQuery(element);
-            var elData = $elem.data('larajqv-rules');
-
-            // None were added yet, initialise
-            if (elData === undefined) {
-                elData = [rule];
-                $elem.data('larajqv-rules', elData);
-            }
-            // Initialised, but not present
-            else if (elData.indexOf(rule) == -1) {
-                    elData.push(rule);
-                    $elem.data('larajqv-rules', elData);
-                }
-                // Already bound
-                else {
-                        return;
-                    }
-
-            // If not yet bound
-            $elem.on('change', function () {
-                if (originalNotEmpty === true && jQuery(fieldInstance.$element.get(0)).val() != '') {
-                    fieldInstance.validate();
-                } else if (originalNotEmpty !== true) {
-                    fieldInstance.validate();
-                }
-            });
-        }
-    };
-
-    // Validate the value against a regex pattern
-    jQuery.validator.addMethod('regex', function (value, element, param) {
-        return RegExp(param).test(value);
-    }, 'The value is in an invalid format.');
-
     // THe value should be different from another input's value
     jQuery.validator.addMethod('different', function (value, element, param) {
-        console.log(this);
-        console.log('trigger other');
-        this.element('#inputInValue');
+        // Re-run validation if the other element's value changes
+        utils.bindChangeToOtherElement('different', param, element, this);
+
         var otherValue = jQuery(param).val();
 
+        // If the other elem's empty or not the same return true
         return otherValue == '' || otherValue != value;
     }, 'This value is not acceptable.');
 
@@ -292,203 +307,198 @@
         return allUnique;
     }, 'A duplicate value has been selected.');
 
+    // The value should be located in one of the checkbox's checked values
+    jQuery.validator.addMethod('inArray', function (value, element, otherFieldName) {
+        var thisElement = jQuery(element);
+
+        var values = [];
+
+        // Check if we're dealing with a text field
+        if (otherFieldName.substring(0, 1) == '#') {
+            // Bind a change event
+            utils.bindChangeToOtherElement('inArray', otherFieldName, element, this, true);
+
+            // If it's a text field we're assuming that it's a list of comma separated values
+            return jQuery(otherFieldName).val().split(',').indexOf(value) > -1;
+        }
+
+        var self = this;
+        // Bind a change handler to the checkboxes
+        jQuery('input:checkbox[name="' + otherFieldName + '"]').each(function () {
+            utils.bindChangeToOtherElement('inArray', this, element, self, true);
+        });
+
+        // Get the selected values of a checkbox by it's name
+        jQuery('input:checkbox[name="' + otherFieldName + '"]:checked').each(function () {
+            values.push(jQuery(this).val());
+        });
+
+        // Check if the value is in there
+        return values.indexOf(value) > -1;
+    }, 'This value is incorrect.');
+
     // The value is required only if another input's value matched one of the defined ones.
     // the parameter should be formatted as data-parsley-required-if="["#elementValueToCheck", "value1,value2,.."]"
-    window.Parsley.addValidator('requiredIf', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var values = jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+    jQuery.validator.addMethod('requiredIf', function (value, element, parameters) {
+        // Normalise the parameters
+        var values = jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Get the other input's selector
-            var field = values[0];
+        // Get the other input's selector
+        var field = values[0];
 
-            // Get the values it should contain to mark this one as required
-            parameters = values.slice(1);
+        // Get the values it should contain to mark this one as required
+        parameters = values.slice(1);
 
-            // make sure that the other element get's a change event
-            utils.bindChangeToOtherElement('requiredIf', field, fieldInstance);
+        // make sure that the other element get's a change event
+        utils.bindChangeToOtherElement('requiredIf', field, element, this);
 
-            // Only required to check if the value is empty
-            if (value.length == 0) {
-                var fieldValue = jQuery(field).val();
+        // Only required to check if the value is empty
+        if (value.length == 0) {
+            var fieldValue = jQuery(field).val();
 
-                return parameters.indexOf(fieldValue) == -1;
-            }
-
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            return parameters.indexOf(fieldValue) == -1;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     // The value is required if other field does not contain any of the specified values
     // the parameter should be formatted as data-parsley-required-unless="["#elementValueToCheck", "value1,value2,.."]"
-    window.Parsley.addValidator('requiredUnless', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var values = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+    jQuery.validator.addMethod('requiredUnless', function (value, element, parameters) {
+        // Normalise the parameters
+        var values = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Get the other input's selector
-            var field = values[0];
+        // Get the other input's selector
+        var field = values[0];
 
-            // Get the values it should contain to mark this one as required
-            parameters = values.slice(1);
+        // Get the values it should contain to mark this one as required
+        parameters = values.slice(1);
 
-            // make sure that the other element get's a change event
-            utils.bindChangeToOtherElement('requiredUnless', field, fieldInstance);
+        // make sure that the other element get's a change event
+        utils.bindChangeToOtherElement('requiredUnless', field, element, this);
 
-            // Only required to check if the value is empty
-            if (value.length == 0) {
+        // Only required to check if the value is empty
+        if (value.length == 0) {
 
-                var fieldValue = jQuery(field).val();
+            var fieldValue = jQuery(field).val();
 
-                // It's not required if the input has one of the values
-                return parameters.indexOf(fieldValue) > -1;
-            }
-
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            // It's not required if the input has one of the values
+            return parameters.indexOf(fieldValue) > -1;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     // The value is required if  any of the inputs are present in the dom
     // the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
-    window.Parsley.addValidator('requiredWith', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+    jQuery.validator.addMethod('requiredWith', function (value, element, parameters) {
+        // Normalise the parameters
+        var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Only validate if the char count is 0
-            if (value.length == 0) {
-                var AnyPresent = false;
+        // Only validate if the char count is 0
+        if (value.length == 0) {
+            var AnyPresent = false;
 
-                allElements.forEach(function (id) {
-                    var $elem = jQuery(id);
+            allElements.forEach(function (id) {
+                var $elem = jQuery(id);
 
-                    // Check for changes on this other input
-                    utils.bindChangeToOtherElement('requiredWith', id, fieldInstance);
+                // Check for changes on this other input
+                utils.bindChangeToOtherElement('requiredWith', id, element, this);
 
-                    // If the element is in the dom and has a value
-                    if ($elem.length > 0 && $elem.val() != '') {
-                        AnyPresent = true;
-                    }
-                });
+                // If the element is in the dom and has a value
+                if ($elem.length > 0 && $elem.val() != '') {
+                    AnyPresent = true;
+                }
+            });
 
-                return !AnyPresent;
-            }
-
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            return !AnyPresent;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     // The value is required if all other inputs are present in the dom
     // the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
-    window.Parsley.addValidator('requiredWithAll', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+    jQuery.validator.addMethod('requiredWithAll', function (value, element, parameters) {
+        // Normalise the parameters
+        var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Only validate if the char count is 0
-            if (value.length == 0) {
-                var AllPresent = true;
+        // Only validate if the char count is 0
+        if (value.length == 0) {
+            var AllPresent = true;
 
-                allElements.forEach(function (id) {
-                    var $elem = jQuery(id);
+            allElements.forEach(function (id) {
+                var $elem = jQuery(id);
 
-                    // Check for changes on this other input
-                    utils.bindChangeToOtherElement('requiredWithAll', id, fieldInstance);
+                // Check for changes on this other input
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
 
-                    // If the value isn't in the dom or is empty
-                    if ($elem.length == 0 || $elem.val() == '') {
-                        AllPresent = false;
-                    }
-                });
+                // If the value isn't in the dom or is empty
+                if ($elem.length == 0 || $elem.val() == '') {
+                    AllPresent = false;
+                }
+            });
 
-                return !AllPresent;
-            }
-
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            return !AllPresent;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     // The value is required if any of the inputs are not present in the dom
     // the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
-    window.Parsley.addValidator('requiredWithout', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Only validate if the char count is 0
-            if (value.length == 0) {
-                var AnyPresent = false;
+    jQuery.validator.addMethod('requiredWithout', function (value, element, parameters) {
+        // Normalise the parameters
+        var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-                allElements.forEach(function (id) {
-                    var $elem = jQuery(id);
+        // Only validate if the char count is 0
+        if (value.length == 0) {
+            var AnyPresent = false;
 
-                    // Check for changes on this other input
-                    utils.bindChangeToOtherElement('requiredWithAll', id, fieldInstance);
+            allElements.forEach(function (id) {
+                var $elem = jQuery(id);
 
-                    if ($elem.length == 0 || $elem.val() == '') {
-                        AnyPresent = true;
-                    }
-                });
+                // Check for changes on this other input
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
 
-                return AnyPresent;
-            }
+                if ($elem.length == 0 || $elem.val() == '') {
+                    AnyPresent = true;
+                }
+            });
 
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            return AnyPresent;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     // The value is required if all other inputs are not present in the dom
     // the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
-    window.Parsley.addValidator('requiredWithoutAll', {
-        requirementType: 'string',
-        validateString: function validateString(value, element, parameters, fieldInstance) {
-            // Normalise the parameters
-            var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
+    jQuery.validator.addMethod('requiredWithoutAll', function (value, element, parameters) {
+        // Normalise the parameters
+        var allElements = !jQuery.isArray(parameters) ? utils.parseArrayStringParameter(parameters) : parameters;
 
-            // Only validate if the char count is 0
-            if (value.length == 0) {
-                var AllEmpty = true;
+        // Only validate if the char count is 0
+        if (value.length == 0) {
+            var AllEmpty = true;
 
-                allElements.forEach(function (id) {
-                    var $elem = jQuery(id);
+            allElements.forEach(function (id) {
+                var $elem = jQuery(id);
 
-                    // Check for changes on this other input
-                    utils.bindChangeToOtherElement('requiredWithAll', id, fieldInstance);
+                // Check for changes on this other input
+                utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
 
-                    if ($elem.length == 1 && $elem.val() != '') {
-                        AllEmpty = false;
-                    }
-                });
+                if ($elem.length == 1 && $elem.val() != '') {
+                    AllEmpty = false;
+                }
+            });
 
-                return AllEmpty;
-            }
-
-            return true;
-        },
-        messages: {
-            en: 'This field is required.'
+            return AllEmpty;
         }
-    });
+
+        return true;
+    }, 'This field is required.');
 
     var filesSizes = {
         b: 1,
@@ -498,274 +508,229 @@
     };
 
     // Make sure all files within the inputs are equal to or smaller than the defined size.
-    window.Parsley.addValidator('fileSizeMax', {
-        requirementType: ['integer', 'string'],
-        validateString: function validateString(value, maxSize, sizeMultiplyer, parsleyFieldInstance) {
-            sizeMultiplyer = sizeMultiplyer.toLowerCase();
-            var files = parsleyFieldInstance.$element[0].files;
+    jQuery.validator.addMethod('fileSizeMax', function (value, element, params) {
+        var maxSize = params[0];
+        sizeMultiplyer = params[1].toLowerCase();
+        var files = element.files;
 
-            // Multiply the max file size
-            maxSize = maxSize * filesSizes[sizeMultiplyer.toLowerCase()];
+        // Multiply the max file size
+        maxSize = maxSize * filesSizes[sizeMultiplyer.toLowerCase()];
 
-            console.log(maxSize);
+        console.log(maxSize);
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    console.log(files[i].size);
-                    if (files[i].size > maxSize) {
-                        return false;
-                    }
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                console.log(files[i].size);
+                if (files[i].size > maxSize) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'Your file(s) are too big.'
         }
-    });
+
+        return true;
+    }, 'Your file(s) are too big.');
 
     // Make sure all files within the inputs are equal to or bigger than the defined size.
-    window.Parsley.addValidator('fileSizeMin', {
-        requirementType: ['integer', 'string'],
-        validateString: function validateString(value, minSize, sizeMultiplyer, parsleyFieldInstance) {
-            var files = parsleyFieldInstance.$element[0].files;
+    jQuery.validator.addMethod('fileSizeMin', function (value, element, params) {
+        var files = element.files;
 
-            // Multiply the min file size
-            minSize = minSize * filesSizes[sizeMultiplyer.toLowerCase()];
+        // Multiply the min file size
+        var minSize = params[0] * filesSizes[params[1].toLowerCase()];
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    if (files[i].size < minSize) {
-                        return false;
-                    }
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size < minSize) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'Your file(s) should are too small.'
         }
-    });
+
+        return true;
+    }, 'Your file(s) should are too small.');
 
     // Make sure all files within the inputs are between the defined sizes.
-    window.Parsley.addValidator('fileSizeBetween', {
-        requirementType: ['integer', 'integer', 'string'],
-        validateString: function validateString(value, minSize, maxSize, sizeMultiplyer, parsleyFieldInstance) {
-            var files = parsleyFieldInstance.$element[0].files;
+    jQuery.validator.addMethod('fileSizeBetween', function (value, element, params) {
+        var files = element.files;
 
-            // Multiply the file sizes
-            minSize = minSize * filesSizes[sizeMultiplyer.toLowerCase()];
-            maxSize = maxSize * filesSizes[sizeMultiplyer.toLowerCase()];
+        // Multiply the file sizes
+        var minSize = params[0] * filesSizes[params[2].toLowerCase()];
+        var maxSize = params[1] * filesSizes[params[2].toLowerCase()];
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    if (files[i].size <= minSize || files[i].size >= maxSize) {
-                        return false;
-                    }
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                if (files[i].size <= minSize || files[i].size >= maxSize) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'Your file(s) should be between %s and %s %s.'
         }
-    });
+
+        return true;
+    }, 'Your file(s) should be between %s and %s %s.');
 
     // Make sure all files within the input are an image
-    window.Parsley.addValidator('image', {
-        validateString: function validateString(value, param, parsleyFieldInstance) {
-            var files = parsleyFieldInstance.$element[0].files;
+    jQuery.validator.addMethod('image', function (value, element, param) {
+        var files = element.files;
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    if (!files[i].type.match('image/*')) {
-                        return false;
-                    }
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                if (!files[i].type.match('image/*')) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'This is not an image.'
         }
-    });
+
+        return true;
+    }, 'This is not an image.');
 
     // Make sure all files within the input have one of the defined mimetypes
-    window.Parsley.addValidator('fileMimetype', {
-        requirementType: 'string',
-        validateString: function validateString(value, mimetypes, parsleyFieldInstance) {
-            var allMimes = utils.parseArrayStringParameter(mimetypes);
+    jQuery.validator.addMethod('fileMimetype', function (value, element, mimetypes) {
+        var allMimes = utils.parseArrayStringParameter(mimetypes);
 
-            var files = parsleyFieldInstance.$element[0].files;
+        var files = element.files;
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    if (allMimes.indexOf(files[i].type) == -1) {
-                        return false;
-                    }
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                if (allMimes.indexOf(files[i].type) == -1) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'This file does not have the correct mimetype "%s".'
         }
-    });
+
+        return true;
+    }, 'This file does not have the correct mimetype "%s".');
 
     // Make sure all files within the input have one of the defined extensions
-    window.Parsley.addValidator('fileExt', {
-        requirementType: 'string',
-        validateString: function validateString(value, extensions, parsleyFieldInstance) {
-            var allExts = utils.parseArrayStringParameter(extensions);
+    jQuery.validator.addMethod('fileExt', function (value, element, extensions) {
+        var allExts = utils.parseArrayStringParameter(extensions);
 
-            var files = parsleyFieldInstance.$element[0].files;
+        var files = element.files;
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                // Loop over the files
-                for (var i = 0; i < files.length; i++) {
-                    var explodeNames = files[i].name.split('.');
+        // If a file is present in the input
+        if (files.length > 0) {
+            // Loop over the files
+            for (var i = 0; i < files.length; i++) {
+                var explodeNames = files[i].name.split('.');
 
-                    if (allExts.indexOf(explodeNames[explodeNames.length - 1]) == -1) {
-                        return false;
-                    }
+                if (allExts.indexOf(explodeNames[explodeNames.length - 1]) == -1) {
+                    return false;
                 }
             }
-
-            return true;
-        },
-        messages: {
-            en: 'This file does not have the correct extensions.'
         }
-    });
+
+        return true;
+    }, 'This file does not have the correct extensions.');
 
     // Make sure all images within the input have specific dimensions
-    window.Parsley.addValidator('dimensions', {
-        requirementType: {
-            '': 'boolean',
-            min_width: 'number', // Specify the minimum width the image should have
-            max_width: 'number', // Specify the maximum width the image should have
-            min_height: 'number', // Specify the minimum height the image should have
-            max_height: 'number', // Specify the maximum height the image should have
-            width: 'number', // Specify the  width the image should have
-            height: 'number', // Specify the height the image should have
-            ratio: 'string' },
-        // Specify the ratio the image should have
-        validateString: function validateString(value, param, parsleyFieldInstance) {
-            var files = parsleyFieldInstance.$element[0].files;
+    jQuery.validator.addMethod('dimensions', function (value, element, param) {
+        var files = element.files;
 
-            var options = parsleyFieldInstance.domOptions.dimensionsOptions;
+        // @todo redo this?
+        var options = jQuery.isJSON(param) ? param : JSON.parse(param);
 
-            // If a file is present in the input
-            if (files.length > 0) {
-                var defer = jQuery.Deferred();
-                var _URL = window.URL || window.webkitURL;
+        // If a file is present in the input
+        if (files.length > 0) {
+            var defer = jQuery.Deferred();
+            var _URL = window.URL || window.webkitURL;
 
-                var image = new Image();
+            var image = new Image();
 
-                // Validate once t he image is loaded
-                image.onload = function () {
-                    var width = this.width;
-                    var height = this.height;
+            // Validate once t he image is loaded
+            image.onload = function () {
+                var width = this.width;
+                var height = this.height;
 
-                    // Check min width, if defined
-                    if (typeof options.min_width != 'undefined') {
-                        if (width < options.min_width) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check min width, if defined
+                if (typeof options.min_width != 'undefined') {
+                    if (width < options.min_width) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check max width, if defined
-                    if (typeof options.max_width != 'undefined') {
-                        if (width > options.max_width) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check max width, if defined
+                if (typeof options.max_width != 'undefined') {
+                    if (width > options.max_width) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check min height, if defined
-                    if (typeof options.min_height != 'undefined') {
-                        if (height < options.min_height) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check min height, if defined
+                if (typeof options.min_height != 'undefined') {
+                    if (height < options.min_height) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check max height, if defined
-                    if (typeof options.max_height != 'undefined') {
-                        if (height > options.max_height) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check max height, if defined
+                if (typeof options.max_height != 'undefined') {
+                    if (height > options.max_height) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check width, if defined
-                    if (typeof options.width != 'undefined') {
-                        if (width != options.width) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check width, if defined
+                if (typeof options.width != 'undefined') {
+                    if (width != options.width) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check height, if defined
-                    if (typeof options.height != 'undefined') {
-                        if (height != options.height) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check height, if defined
+                if (typeof options.height != 'undefined') {
+                    if (height != options.height) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    // Check ratio, if defined
-                    if (typeof options.ratio != 'undefined') {
-                        var splitRatio = options.ratio.split(':');
-                        if (splitRatio[0] / splitRatio[1] != width / height) {
-                            defer.reject(image);
-                            return true;
-                        }
+                // Check ratio, if defined
+                if (typeof options.ratio != 'undefined') {
+                    var splitRatio = options.ratio.split(':');
+                    if (splitRatio[0] / splitRatio[1] != width / height) {
+                        defer.reject(image);
+                        return true;
                     }
+                }
 
-                    defer.resolve(image);
-                };
+                defer.resolve(image);
+            };
 
-                // On error, reject the promise
-                image.onerror = function () {
-                    console.warn('image load error');
-                    defer.reject();
-                };
+            // On error, reject the promise
+            image.onerror = function () {
+                console.warn('image load error');
+                defer.reject();
+            };
 
-                image.src = _URL.createObjectURL(files[0]);
+            image.src = _URL.createObjectURL(files[0]);
 
-                return defer.promise().then(function (image) {
-                    // Clean up
-                    image = null;
+            return defer.promise().then(function (image) {
+                // Clean up
+                image = null;
 
-                    return true;
-                }, function (image) {
-                    // Clean up
-                    image = null;
+                return true;
+            }, function (image) {
+                // Clean up
+                image = null;
 
-                    return false;
-                });
-            }
-
-            return true;
+                return false;
+            });
         }
+
+        return true;
     });
 
     /**
