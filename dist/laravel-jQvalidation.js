@@ -1,6 +1,6 @@
 /*!
  * jQvalidation-laravel.js
- * Version 0.1.0 - built Sun, Jun 26th 2016, 10:47 am
+ * Version 0.1.0 - built Sun, Jun 26th 2016, 11:03 am
  * https://github.com/happyDemon/jQvalidation-laravel
  * Maxim Kerstens - <maxim.kerstens@gmail.com>
  * MIT Licensed
@@ -58,9 +58,10 @@
             // If not yet bound
             $elem.on('change', function () {
                 if (originalNotEmpty === true && $elem.val() != '') {
-                    jQvalidator.element(jQuery(element).attr('id'));
+                    jQvalidator.element('#' + jQuery(element).attr('id'));
                 } else if (originalNotEmpty !== true) {
-                    jQvalidator.element(jQuery(element).attr('id'));
+                    console.log(jQuery(element).attr('id'));
+                    jQvalidator.element('#' + jQuery(element).attr('id'));
                 }
             });
         }
@@ -276,10 +277,13 @@
 
     // THe value should be different from another input's value
     jQuery.validator.addMethod('different', function (value, element, param) {
+        console.log(param, element);
         // Re-run validation if the other element's value changes
         utils.bindChangeToOtherElement('different', param, element, this);
 
         var otherValue = jQuery(param).val();
+
+        console.log(otherValue, value);
 
         // If the other elem's empty or not the same return true
         return otherValue == '' || otherValue != value;
