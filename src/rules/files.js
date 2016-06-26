@@ -11,7 +11,6 @@ var filesSizes = {
 // Make sure all files within the inputs are equal to or smaller than the defined size.
 jQuery.validator.addMethod('fileSizeMax', function (value, element, params) {
     params = (jQuery.isArray(params)) ? params : utils.parseArrayStringParameter(params);
-    console.log(params);
     var maxSize = params[0];
     var sizeMultiplyer = params[1].toLowerCase().trim();
     var files = element.files;
@@ -19,13 +18,10 @@ jQuery.validator.addMethod('fileSizeMax', function (value, element, params) {
     // Multiply the max file size
     maxSize = maxSize * filesSizes[sizeMultiplyer.toLowerCase()];
 
-    console.log(maxSize);
-
     // If a file is present in the input
     if (files.length > 0) {
         // Loop over the files
         for (var i = 0; i < files.length; i++) {
-            console.log(files[i].size);
             if (files[i].size > maxSize) {
                 return false;
             }
@@ -142,7 +138,7 @@ jQuery.validator.addMethod('fileExt', function (value, element, extensions) {
 
 /**
  * jQuery validation needs support for promises in order for this to work.
- * 
+ *
 // Make sure all images within the input have specific dimensions
 jQuery.validator.addMethod('dimensions', function (value, element, param) {
     var files = element.files;

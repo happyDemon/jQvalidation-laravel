@@ -1,6 +1,6 @@
 /*!
  * jQvalidation-laravel.js
- * Version 0.1.0 - built Sun, Jun 26th 2016, 6:10 pm
+ * Version 0.1.0 - built Sun, Jun 26th 2016, 6:56 pm
  * https://github.com/happyDemon/jQvalidation-laravel
  * Maxim Kerstens - <maxim.kerstens@gmail.com>
  * MIT Licensed
@@ -63,75 +63,30 @@
                     jQvalidator.element('#' + jQuery(element).attr('id'));
                 }
             });
-        },
-
-        promiseSuccess: function promiseSuccess(validator, element) {
-            var previous = validator.previousValue(element, 'dimensions');
-
-            if (!validator.settings.messages[element.name]) {
-                validator.settings.messages[element.name] = {};
-            }
-            previous.originalMessage = previous.originalMessage || validator.settings.messages[element.name]['dimensions'];
-            validator.settings.messages[element.name]['dimensions'] = previous.message;
-
-            if (previous.old === element.files[0].name) {
-                return previous.valid;
-            }
-
-            previous.old = element.files[0].name;
-
-            var submitted = validator.formSubmitted;
-            validator.resetInternals();
-            validator.toHide = validator.errorsFor(element);
-            validator.formSubmitted = submitted;
-            validator.successList.push(element);
-            validator.invalid[element.name] = false;
-            validator.showErrors();
-            previous.valid = true;
-        },
-        promiseError: function promiseError(validator, element) {
-            var previous = validator.previousValue(element, 'dimensions');
-
-            if (!validator.settings.messages[element.name]) {
-                validator.settings.messages[element.name] = {};
-            }
-            previous.originalMessage = previous.originalMessage || validator.settings.messages[element.name]['dimensions'];
-            validator.settings.messages[element.name]['dimensions'] = previous.message;
-
-            if (previous.old === element.files[0].name) {
-                return previous.valid;
-            }
-
-            previous.old = element.files[0].name;
-            console.log(element);
-
-            var errors = {};
-            var message = validator.defaultMessage(element, { method: 'dimensions', parameters: [] });
-            errors[element.name] = previous.message = message;
-            validator.invalid[element.name] = true;
-            validator.showErrors(errors);
-            previous.valid = false;
         }
     };
 
     // The value should consist of letters
     jQuery.validator.addMethod('alpha', function (value, element, param) {
-        return RegExp('/^[\pL\pM]+$/u').test(value);
+        return (/^[a-z]+$/i.test(value)
+        );
     }, 'The value is in an invalid format.');
 
     // THe value should consist of letters, dashes and underscores
     jQuery.validator.addMethod('alphaDash', function (value, element, param) {
-        return RegExp('/^[\pL\pM\pN_-]+$/u').test(value);
+        return (/^[A-Za-z\-_\s]+$/.test(value)
+        );
     }, 'This value is not acceptable.');
 
     // THe value should be alpha numeric
     jQuery.validator.addMethod('alphaNum', function (value, element) {
-        return RegExp('/^[\pL\pM\pN]+$/u').test(value);
-    }, 'A duplicate value has been selected.');
+        return (/^\w+$/i.test(value)
+        );
+    }, 'This value is not acceptable.');
 
     // Validate the value against a regex pattern
     jQuery.validator.addMethod('regex', function (value, element, param) {
-        return RegExp(param).test(value);
+        return new RegExp(param).test(value);
     }, 'The value is in an invalid format.');
 
     // Check if the value is within a comma-separated list (val1,val2,..)
@@ -562,7 +517,6 @@
     // Make sure all files within the inputs are equal to or smaller than the defined size.
     jQuery.validator.addMethod('fileSizeMax', function (value, element, params) {
         params = jQuery.isArray(params) ? params : utils.parseArrayStringParameter(params);
-        console.log(params);
         var maxSize = params[0];
         var sizeMultiplyer = params[1].toLowerCase().trim();
         var files = element.files;
@@ -570,13 +524,10 @@
         // Multiply the max file size
         maxSize = maxSize * filesSizes[sizeMultiplyer.toLowerCase()];
 
-        console.log(maxSize);
-
         // If a file is present in the input
         if (files.length > 0) {
             // Loop over the files
             for (var i = 0; i < files.length; i++) {
-                console.log(files[i].size);
                 if (files[i].size > maxSize) {
                     return false;
                 }
@@ -688,7 +639,7 @@
 
     /**
      * jQuery validation needs support for promises in order for this to work.
-     * 
+     *
     // Make sure all images within the input have specific dimensions
     jQuery.validator.addMethod('dimensions', function (value, element, param) {
         var files = element.files;
@@ -811,45 +762,6 @@
         }
          return true;
     });*/
-
-    /**
-     * Overwrite core Parsley methods.
-     *
-     * @type {{_isRequired: Window.ParsleyExtend._isRequired}}
-     */
-    window.ParsleyExtend = jQuery.extend({}, window.ParsleyExtend, {
-        // Normally this was intended Internal only.
-        // Field is required if have required constraint without `false` value
-        _isRequired: function _isRequired() {
-
-            var requiredRules = [
-            // This one comes out of the box with parsley
-            'required',
-
-            // These ones were added with this library
-            'requiredIf', 'requiredUnless', 'requiredWith', 'requiredWithAll', 'requiredWithout', 'requiredWithoutAll'];
-
-            var requiredRulesFound = [];
-
-            // Loop over the list to check if they're defined on the field.
-            requiredRules.forEach(function (rule) {
-                if ('undefined' !== typeof this.constraintsByName[rule]) {
-                    requiredRulesFound.push(rule);
-                }
-            }, this);
-
-            // If there's not one required rule, return false
-            if (requiredRulesFound.length == 0) return false;
-
-            // If parsley's on required rule was found
-            if (requiredRulesFound.indexOf('required') >= 0) {
-                // Check if the flag is set to true
-                return false !== this.constraintsByName.required.requirements;
-            }
-
-            return true;
-        }
-    });
 
     var main = utils;
 

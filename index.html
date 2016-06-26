@@ -32,6 +32,7 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Rules
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu" role="menu">
+                        <li><a href="#rules_string">String</a></li>
                         <li><a href="#rules_in">In</a></li>
                         <li><a href="#rules_different">Different</a></li>
                         <li><a href="#rules_size">Size</a></li>
@@ -64,6 +65,70 @@
 </div>
 
 <div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 id="rules_string">String rules</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <form class="form">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label for="inputAlphaValue" class="control-label">data-rule-alpha</label>
+                                <a class="text-warning clearfix" tabindex="-1"
+                                   href="https://laravel.com/docs/5.2/validation#rule-alpha">alpha</a>
+                            </div>
+                            <div class="col-md-9">
+                                <input data-rule-alpha="true" type="text"
+                                       class="form-control input-sm" id="inputAlphaValue" placeholder="Value">
+                                <div class="help-block text-info">
+                                    <small>Value should be entirely alphabetic characters.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label for="inputalphaNumValue" class="control-label">data-rule-alphaNum</label>
+                                <a class="text-warning clearfix" tabindex="-1"
+                                   href="https://laravel.com/docs/5.2/validation#rule-alpha-num">alpha_num</a>
+                            </div>
+                            <div class="col-md-9">
+                                <input data-rule-alphaNum="true"
+                                       type="text" class="form-control input-sm" id="inputalphaNumValue"
+                                       placeholder="Value">
+                                <div class="help-block text-info">
+                                    <small>Value should not be entirely alphabetic or numeric characters.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <label for="inputalphaDashValue" class="control-label">data-rule-alphaDash</label>
+                                <a class="text-warning clearfix" tabindex="-1"
+                                   href="https://laravel.com/docs/5.2/validation#rule-alpha-dash">alpha_dash</a>
+                            </div>
+                            <div class="col-md-9">
+                                <input data-rule-alphaDash="true"
+                                       type="text" class="form-control input-sm" id="inputalphaDashValue"
+                                       placeholder="Value">
+                                <div class="help-block text-info">
+                                    <small>Value should not be entirely alphabetic characters, underscores or dashes.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-md-12">
             <h1 id="rules_in">In rules</h1>
@@ -227,7 +292,7 @@
                                    href="https://laravel.com/docs/5.2/validation#rule-date">date</a>
                             </div>
                             <div class="col-md-9">
-                                <input data-rule-date type="text"
+                                <input data-rule-date="true" type="text"
                                        class="form-control input-sm" id="inputDate" placeholder="Value">
                                 <div class="help-block text-info">
                                     <small>Value should be a valid date</small>
@@ -355,19 +420,19 @@
                             <div class="col-md-9">
                                 <ul class="list-inline">
                                     <li>
-                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct
+                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct="true"
                                                type="checkbox" class="input-sm form-control" value="blue"> Blue
                                     </li>
                                     <li>
-                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct
+                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct="true"
                                                type="checkbox" class="input-sm form-control" value="green"> Green
                                     </li>
                                     <li>
-                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct
+                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct="true"
                                                type="checkbox" class="input-sm form-control" value="blue"> Blue
                                     </li>
                                     <li>
-                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct
+                                        <input data-rule-trigger="change" name="disctinct" data-rule-distinct="true"
                                                type="checkbox" class="input-sm form-control" value="green"> Green
                                     </li>
                                 </ul>
