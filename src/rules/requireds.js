@@ -2,10 +2,10 @@ import jQuery from 'jquery';
 import utils from '../utils.js';
 
 // The value is required only if another input's value matched one of the defined ones.
-// the parameter should be formatted as data-parsley-required-if="["#elementValueToCheck", "value1,value2,.."]"
+// the parameter should be formatted as data-rule-requiredIf="["#elementValueToCheck", "value1,value2,.."]"
 jQuery.validator.addMethod('requiredIf', function (value, element, parameters) {
     // Normalise the parameters
-    var values = (jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
+    var values = (!jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
 
     // Get the other input's selector
     var field = values[0];
@@ -28,7 +28,7 @@ jQuery.validator.addMethod('requiredIf', function (value, element, parameters) {
 
 
 // The value is required if other field does not contain any of the specified values
-// the parameter should be formatted as data-parsley-required-unless="["#elementValueToCheck", "value1,value2,.."]"
+// the parameter should be formatted as data-rule-requiredUnless="["#elementValueToCheck", "value1,value2,.."]"
 jQuery.validator.addMethod('requiredUnless', function (value, element, parameters) {
     // Normalise the parameters
     var values = (!jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -56,7 +56,7 @@ jQuery.validator.addMethod('requiredUnless', function (value, element, parameter
 
 
 // The value is required if  any of the inputs are present in the dom
-// the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
+// the parameter should be formatted as data-rule-requiredWith="#elementValueToCheck,#elementValueToCheck,.."
 jQuery.validator.addMethod('requiredWith', function (value, element, parameters) {
     // Normalise the parameters
     var allElements = (!jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -64,12 +64,13 @@ jQuery.validator.addMethod('requiredWith', function (value, element, parameters)
     // Only validate if the char count is 0
     if (value.length == 0) {
         var AnyPresent = false;
+        var self = this;
 
         allElements.forEach(function (id) {
             var $elem = jQuery(id);
 
             // Check for changes on this other input
-            utils.bindChangeToOtherElement('requiredWith', id, element, this);
+            utils.bindChangeToOtherElement('requiredWith', id, element, self);
 
             // If the element is in the dom and has a value
             if ($elem.length > 0 && $elem.val() != '') {
@@ -85,7 +86,7 @@ jQuery.validator.addMethod('requiredWith', function (value, element, parameters)
 
 
 // The value is required if all other inputs are present in the dom
-// the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
+// the parameter should be formatted as data-rule-requiredWithAll="#elementValueToCheck,#elementValueToCheck,.."
 jQuery.validator.addMethod('requiredWithAll', function (value, element, parameters) {
     // Normalise the parameters
     var allElements = (!jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -93,12 +94,13 @@ jQuery.validator.addMethod('requiredWithAll', function (value, element, paramete
     // Only validate if the char count is 0
     if (value.length == 0) {
         var AllPresent = true;
+        var self = this;
 
         allElements.forEach(function (id) {
             var $elem = jQuery(id);
 
             // Check for changes on this other input
-            utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+            utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
             // If the value isn't in the dom or is empty
             if ($elem.length == 0 || $elem.val() == '') {
@@ -114,7 +116,7 @@ jQuery.validator.addMethod('requiredWithAll', function (value, element, paramete
 
 
 // The value is required if any of the inputs are not present in the dom
-// the parameter should be formatted as data-parsley-required-with="#elementValueToCheck,#elementValueToCheck,.."
+// the parameter should be formatted as data-rule-requiredWith="#elementValueToCheck,#elementValueToCheck,.."
 
 jQuery.validator.addMethod('requiredWithout', function (value, element, parameters) {
     // Normalise the parameters
@@ -123,27 +125,28 @@ jQuery.validator.addMethod('requiredWithout', function (value, element, paramete
     // Only validate if the char count is 0
     if (value.length == 0) {
         var AnyPresent = false;
+        var self = this;
 
         allElements.forEach(function (id) {
             var $elem = jQuery(id);
 
             // Check for changes on this other input
-            utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+            utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
             if ($elem.length == 0 || $elem.val() == '') {
                 AnyPresent = true;
             }
         });
 
-        return AnyPresent;
+        return !AnyPresent;
     }
 
     return true;
 }, 'This field is required.');
 
 
-// The value is required if all other inputs are not present in the dom
-// the parameter should be formatted as data-parsley-required-with-all="#elementValueToCheck,#elementValueToCheck,.."
+// The value is required if all other inputs are not empty
+// the parameter should be formatted as data-rule-requiredWithAll="#elementValueToCheck,#elementValueToCheck,.."
 jQuery.validator.addMethod('requiredWithoutAll', function (value, element, parameters) {
     // Normalise the parameters
     var allElements = (!jQuery.isArray(parameters)) ? utils.parseArrayStringParameter(parameters) : parameters;
@@ -151,12 +154,13 @@ jQuery.validator.addMethod('requiredWithoutAll', function (value, element, param
     // Only validate if the char count is 0
     if (value.length == 0) {
         var AllEmpty = true;
+        var self = this;
 
         allElements.forEach(function (id) {
             var $elem = jQuery(id);
 
             // Check for changes on this other input
-            utils.bindChangeToOtherElement('requiredWithAll', id, element, this);
+            utils.bindChangeToOtherElement('requiredWithAll', id, element, self);
 
             if ($elem.length == 1 && $elem.val() != '') {
                 AllEmpty = false;
