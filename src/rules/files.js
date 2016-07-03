@@ -74,7 +74,7 @@ jQuery.validator.addMethod('fileSizeBetween', function (value, element, params) 
     }
 
     return true;
-}, 'Your file(s) should be between %s and %s %s.');
+}, 'Your file(s) should be between {0} and {1} {2}.');
 
 
 // Make sure all files within the input are an image
@@ -112,7 +112,7 @@ jQuery.validator.addMethod('fileMimetype', function (value, element, mimetypes) 
     }
 
     return true;
-}, 'This file does not have the correct mimetype "%s".');
+}, 'This file does not have the correct mimetype "{0}".');
 
 
 // Make sure all files within the input have one of the defined extensions

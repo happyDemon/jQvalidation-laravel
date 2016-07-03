@@ -1,5 +1,5 @@
 {
-  "name": "jQ-validation-laravel-extras",
+  "name": "laravel-jQvalidation",
   "version": "0.1.0",
   "description": "Provides extra validation rules for jQuery validation that translate well to rules that laravel has out-of-the-box",
   "main": "dist/laravel-jQvalidation.js",

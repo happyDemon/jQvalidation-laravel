@@ -15,7 +15,7 @@ jQuery.validator.addMethod('date', function (value, element, state) {
 // Check if the value is a date in a specific format
 jQuery.validator.addMethod('dateFormat', function (value, element, parameter) {
     return moment(value, formatDatePhpToJs.convert(parameter), true).isValid();
-}, 'The date you entered is not in the right format (%s).');
+}, 'The date you entered is not in the right format ({0}).');
 
 
 // Check if the value is a date before the specified date
@@ -29,7 +29,7 @@ jQuery.validator.addMethod('before', function (value, element, parameter) {
         return false;
 
     return moment(value, dateFormats) < beforeDate;
-}, 'The date you entered should be before %s.');
+}, 'The date you entered should be before {0}.');
 
 // Check if the value is a date before the specified date (from another input)
 jQuery.validator.addMethod('beforeInput', function (value, element, parameter) {
@@ -63,7 +63,7 @@ jQuery.validator.addMethod('beforeInput', function (value, element, parameter) {
     }
 
     return thisDate < beforeDate;
-}, 'The date you entered should be before %s.');
+}, 'The date you entered should be before {0}.');
 
 
 // Check if the value is a date before the specified date
@@ -76,7 +76,7 @@ jQuery.validator.addMethod('after', function (value, element, parameter) {
         return false;
 
     return moment(value, dateFormats) > afterDate;
-}, 'The date you entered should be after %s.');
+}, 'The date you entered should be after {0}.');
 
 // Check if the value is a date before the specified date (from another input)
 jQuery.validator.addMethod('afterInput', function (value, element, parameter) {
@@ -112,7 +112,7 @@ jQuery.validator.addMethod('afterInput', function (value, element, parameter) {
     }
 
     return thisDate > afterDate;
-}, 'The date you entered should be after %s.');
+}, 'The date you entered should be after {0}.');
 
 // convert PHP date format to moment JS date format
 var formatDatePhpToJs = window.formatDatePhpToJs = {
