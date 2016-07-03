@@ -1,6 +1,6 @@
 /*!
  * jQvalidation-laravel.js
- * Version 0.1.0 - built Sun, Jun 26th 2016, 6:56 pm
+ * Version 0.2.0 - built Sun, Jul 3rd 2016, 10:58 am
  * https://github.com/happyDemon/jQvalidation-laravel
  * Maxim Kerstens - <maxim.kerstens@gmail.com>
  * MIT Licensed
@@ -116,7 +116,7 @@
     // Check if the value is a date in a specific format
     jQuery.validator.addMethod('dateFormat', function (value, element, parameter) {
         return moment(value, formatDatePhpToJs.convert(parameter), true).isValid();
-    }, 'The date you entered is not in the right format (%s).');
+    }, 'The date you entered is not in the right format ({0}).');
 
     // Check if the value is a date before the specified date
     jQuery.validator.addMethod('before', function (value, element, parameter) {
@@ -128,7 +128,7 @@
         if (beforeDate === false) return false;
 
         return moment(value, dateFormats) < beforeDate;
-    }, 'The date you entered should be before %s.');
+    }, 'The date you entered should be before {0}.');
 
     // Check if the value is a date before the specified date (from another input)
     jQuery.validator.addMethod('beforeInput', function (value, element, parameter) {
@@ -160,7 +160,7 @@
         }
 
         return thisDate < beforeDate;
-    }, 'The date you entered should be before %s.');
+    }, 'The date you entered should be before {0}.');
 
     // Check if the value is a date before the specified date
     jQuery.validator.addMethod('after', function (value, element, parameter) {
@@ -171,7 +171,7 @@
         if (afterDate === false) return false;
 
         return moment(value, dateFormats) > afterDate;
-    }, 'The date you entered should be after %s.');
+    }, 'The date you entered should be after {0}.');
 
     // Check if the value is a date before the specified date (from another input)
     jQuery.validator.addMethod('afterInput', function (value, element, parameter) {
@@ -205,7 +205,7 @@
         }
 
         return thisDate > afterDate;
-    }, 'The date you entered should be after %s.');
+    }, 'The date you entered should be after {0}.');
 
     // convert PHP date format to moment JS date format
     var formatDatePhpToJs = window.formatDatePhpToJs = {
@@ -578,7 +578,7 @@
         }
 
         return true;
-    }, 'Your file(s) should be between %s and %s %s.');
+    }, 'Your file(s) should be between {0} and {1} {2}.');
 
     // Make sure all files within the input are an image
     jQuery.validator.addMethod('image', function (value, element, param) {
@@ -614,7 +614,7 @@
         }
 
         return true;
-    }, 'This file does not have the correct mimetype "%s".');
+    }, 'This file does not have the correct mimetype "{0}".');
 
     // Make sure all files within the input have one of the defined extensions
     jQuery.validator.addMethod('fileExt', function (value, element, extensions) {
